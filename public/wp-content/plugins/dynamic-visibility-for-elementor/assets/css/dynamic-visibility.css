@@ -1,0 +1,12 @@
+.dce-visibility-element-hidden,
+.dce-visibility-widget-hidden,
+.dce-visibility-column-hidden,
+.dce-visibility-section-hidden {
+  display: none !important;
+}
+
+.dce-visibility-element-hidden.elementor-widget-dyncontel-panorama {
+  display: block;
+  position: fixed;
+  left: 10000px;
+}
