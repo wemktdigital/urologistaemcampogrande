@@ -258,6 +258,7 @@ def replace_page_title(html: str) -> str:
 
 def rewrite_html(html: str) -> str:
     html = replace_page_title(html)
+    original_canonical = re.search(r'<link rel="canonical" href="([^"]*)"', html, flags=re.I)
     html = strip_origin(html)
     html = re.sub(r"<link[^>]+(?:xmlrpc\.php|/wp-json/|/feed/)[^>]*>", "", html, flags=re.I)
     html = re.sub(
@@ -266,6 +267,14 @@ def rewrite_html(html: str) -> str:
         html,
         flags=re.I,
     )
+    if original_canonical and original_canonical.group(1).rstrip("/") == ORIGIN:
+        html = re.sub(
+            r'(<link rel="canonical" href=")[^"]*',
+            lambda match: match.group(1) + original_canonical.group(1),
+            html,
+            count=1,
+            flags=re.I,
+        )
     html = OLD_SERVER.sub("", html)
     html = re.sub(
         r'<script\b[^>]*\bsrc="https://cdn\.trustindex\.io/loader\.js[^"]*"[^>]*>\s*</script>',
@@ -325,13 +334,14 @@ def restore_public_urls(html: str) -> str:
     html = re.sub(r'<meta name="twitter:image" content="([^"]*)"', twitter, html)
 
     def schema(match: re.Match) -> str:
-        block = match.group(0)
-        return block.replace('"/', f'"{ORIGIN}/')
+        block = re.sub(r'"/(?!/)', f'"{ORIGIN}/', match.group(0))
+        return re.sub(r'"\\/(?!\\/)', '"' + ORIGIN.replace("/", "\\/") + "\\/", block)
 
     return re.sub(
-        r'<script type="application/ld\+json" class="rank-math-schema">[\s\S]*?</script>',
+        r'<script\b[^>]*type=["\']application/ld\+json["\'][^>]*>[\s\S]*?</script>',
         schema,
         html,
+        flags=re.I,
     )
 
 

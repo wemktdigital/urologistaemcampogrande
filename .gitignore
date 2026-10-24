@@ -5,3 +5,4 @@ __pycache__/
 .vercel/
 mirror-report.json
 audit-report.json
+.vercel
